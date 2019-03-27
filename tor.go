@@ -1,6 +1,7 @@
 package jsonrpconion
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"sync"
@@ -16,14 +17,14 @@ var onceClose sync.Once
 func getTorProcess() (*tor.Tor, error) {
 	var err error
 	onceStart.Do(func() {
-		os.Mkdir(".data", 0700)
-		file, _ := os.Create(".data/rpctorrc")
+		os.Mkdir(cfgDataDir, 0700)
+		file, _ := os.Create(fmt.Sprintf("%s/%s", cfgDataDir, cfgTorc))
 		if file != nil {
 			file.Close()
 		}
 
-		dir, _ := filepath.Abs(".data")
-		torrc, _ := filepath.Abs(".data/rpctorrc")
+		dir, _ := filepath.Abs(cfgDataDir)
+		torrc, _ := filepath.Abs(fmt.Sprintf("%s/%s", cfgDataDir, cfgTorc))
 
 		torProcess, err = tor.Start(nil, &tor.StartConf{
 			DataDir:   dir,

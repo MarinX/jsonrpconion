@@ -6,6 +6,7 @@ import (
 	"net/rpc/jsonrpc"
 
 	"github.com/cretz/bine/tor"
+	"github.com/cretz/bine/torutil/ed25519"
 )
 
 // Server represents an RPC Server on Tor.
@@ -85,10 +86,25 @@ func (s *Server) runOnion() error {
 		return err
 	}
 
-	s.onionService, err = t.Listen(nil, &tor.ListenConf{
+	cfg := &tor.ListenConf{
 		Version3:    true,
 		RemotePorts: []int{80},
-	})
+	}
+
+	var inPathKey bool
+	if keyExist() {
+		inPathKey = true
+		key, err := loadKey()
+		if err == nil {
+			cfg.Key = key
+		}
+	}
+
+	s.onionService, err = t.Listen(nil, cfg)
+	if !inPathKey {
+		key := s.onionService.Key.(ed25519.KeyPair)
+		saveKey(key.PrivateKey())
+	}
 
 	return err
 }
